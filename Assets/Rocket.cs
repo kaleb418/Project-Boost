@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class Rocket:MonoBehaviour {
     private Rigidbody rocketBody;
-    private AudioSource audio;
+    private AudioSource rocketAudioSource;
 
     private enum State {
         Running,
@@ -20,6 +20,8 @@ public class Rocket:MonoBehaviour {
 
     [SerializeField] float thrustMultiplier = 700f;
     [SerializeField] float rotationMultiplier = 50f;
+    [SerializeField] AudioClip engineAudio;
+    [SerializeField] AudioClip winAudio;
 
     // Start is called before the first frame update
     void Start() {
@@ -29,14 +31,13 @@ public class Rocket:MonoBehaviour {
 
     private void SetComponents() {
         rocketBody = GetComponent<Rigidbody>();
-        audio = GetComponent<AudioSource>();
+        rocketAudioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
     void Update() {
         ProcessInput();
         moveAudioPitch();
-        
     }
 
     private void OnCollisionEnter(Collision collision) {
@@ -52,12 +53,13 @@ public class Rocket:MonoBehaviour {
             case "Finish":
                 // Win level - todo Win on landing, not hitting side
                 currentState = State.SceneWon;
-                Invoke("LoadNextScene", 1f);
+                rocketAudioSource.PlayOneShot(winAudio);
+                Invoke("LoadNextScene", 2f);
                 break;
             default:
                 // Die
                 currentState = State.SceneLost;
-                Invoke("LoadFirstScene", 1f);
+                Invoke("LoadFirstScene", 2f);
                 break;
         }
     }
@@ -67,14 +69,17 @@ public class Rocket:MonoBehaviour {
     }
 
     private void LoadFirstScene() {
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene(0);
     }
 
     private void moveAudioPitch() {
-        if(Math.Abs(pitchGoal - audio.pitch) > deltaPitch) {
-            audio.pitch += + (float) (Math.Sign(pitchGoal - audio.pitch) * deltaPitch);
+        if(!rocketAudioSource.isPlaying) {
+            rocketAudioSource.PlayOneShot(engineAudio);
+        }
+        if(Math.Abs(pitchGoal - GetComponent<AudioSource>().pitch) > deltaPitch) {
+            GetComponent<AudioSource>().pitch += + (float) (Math.Sign(pitchGoal - GetComponent<AudioSource>().pitch) * deltaPitch);
         } else {
-            audio.pitch = (float) pitchGoal;
+            GetComponent<AudioSource>().pitch = (float) pitchGoal;
         }
     }
 
