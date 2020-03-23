@@ -2,10 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Rocket:MonoBehaviour {
-    Rigidbody rocketBody;
-    AudioSource audio;
+    private Rigidbody rocketBody;
+    private AudioSource audio;
+
+    private enum State {
+        Running,
+        SceneWon,
+        SceneLost
+    }
+    private State currentState;
 
     private double pitchGoal = 0.5f;
     private double deltaPitch = 0.05;
@@ -15,6 +23,11 @@ public class Rocket:MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
+        currentState = State.Running;
+        SetComponents();
+    }
+
+    private void SetComponents() {
         rocketBody = GetComponent<Rigidbody>();
         audio = GetComponent<AudioSource>();
     }
@@ -27,24 +40,34 @@ public class Rocket:MonoBehaviour {
     }
 
     private void OnCollisionEnter(Collision collision) {
+        if(currentState != State.Running) { return; }
+
         switch(collision.gameObject.tag) {
             case "Friendly":
                 // Do nothing
-                print("Friendly");
                 break;
             case "Fuel":
-                // Fuel ship
-                print("Fuel");
+                // Fuel ship - todo Add fuel aspect
                 break;
             case "Finish":
-                // Win game - todo Win on landing, not hitting side
-                print("Finish");
+                // Win level - todo Win on landing, not hitting side
+                currentState = State.SceneWon;
+                Invoke("LoadNextScene", 1f);
                 break;
             default:
                 // Die
-                print("Death");
+                currentState = State.SceneLost;
+                Invoke("LoadFirstScene", 1f);
                 break;
         }
+    }
+
+    private void LoadNextScene() {
+        SceneManager.LoadScene(1);
+    }
+
+    private void LoadFirstScene() {
+        SceneManager.LoadScene(1);
     }
 
     private void moveAudioPitch() {
@@ -56,22 +79,26 @@ public class Rocket:MonoBehaviour {
     }
 
     private void ProcessInput() {
-        if(Input.GetKey(KeyCode.Space)) {
-            // Thrusting
-            rocketBody.AddRelativeForce(Vector3.up * thrustMultiplier * Time.deltaTime);
-            pitchGoal = 3f;
+        rocketBody.freezeRotation = true;
+        if(currentState == State.Running) {
+            if(Input.GetKey(KeyCode.Space)) {
+                // Thrusting
+                rocketBody.AddRelativeForce(Vector3.up * thrustMultiplier * Time.deltaTime);
+                pitchGoal = 3f;
+            } else {
+                pitchGoal = 0.5f;
+            }
+
+            if(Input.GetKey(KeyCode.A)) {
+                // Rotate left
+                transform.Rotate(Vector3.forward * rotationMultiplier * Time.deltaTime);
+            }
+            else if(Input.GetKey(KeyCode.D)) {
+                // Rotate right
+                transform.Rotate(Vector3.back * rotationMultiplier * Time.deltaTime);
+            }
         } else {
             pitchGoal = 0.5f;
-        }
-
-        rocketBody.freezeRotation = true;
-        if(Input.GetKey(KeyCode.A)) {
-            // Rotate left
-            transform.Rotate(Vector3.forward * rotationMultiplier * Time.deltaTime);
-        }
-        else if(Input.GetKey(KeyCode.D)) {
-            // Rotate right
-            transform.Rotate(Vector3.back * rotationMultiplier * Time.deltaTime);
         }
         rocketBody.freezeRotation = false;
     }

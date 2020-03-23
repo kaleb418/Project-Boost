@@ -136,11 +136,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2129135131, guid: db955994b80cc4dc4bf94c49bea67946, type: 3}
       propertyPath: thrustMultiplier
-      value: 750
+      value: 1250
       objectReference: {fileID: 0}
     - target: {fileID: 2129135131, guid: db955994b80cc4dc4bf94c49bea67946, type: 3}
       propertyPath: rotationMultiplier
-      value: 50
+      value: 75
       objectReference: {fileID: 0}
     - target: {fileID: 1523718072676416537, guid: db955994b80cc4dc4bf94c49bea67946,
         type: 3}

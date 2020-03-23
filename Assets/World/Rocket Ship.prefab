@@ -258,7 +258,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   thrustMultiplier: 1250
-  rotationMultiplier: 125
+  rotationMultiplier: 75
 --- !u!82 &2129135134
 AudioSource:
   m_ObjectHideFlags: 0
