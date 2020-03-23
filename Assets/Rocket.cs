@@ -23,6 +23,7 @@ public class Rocket:MonoBehaviour {
     void Update() {
         ProcessInput();
         moveAudioPitch();
+        
     }
 
     private void OnCollisionEnter(Collision collision) {
