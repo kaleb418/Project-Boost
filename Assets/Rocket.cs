@@ -25,6 +25,27 @@ public class Rocket:MonoBehaviour {
         moveAudioPitch();
     }
 
+    private void OnCollisionEnter(Collision collision) {
+        switch(collision.gameObject.tag) {
+            case "Friendly":
+                // Do nothing
+                print("Friendly");
+                break;
+            case "Fuel":
+                // Fuel ship
+                print("Fuel");
+                break;
+            case "Finish":
+                // Win game - todo Win on landing, not hitting side
+                print("Finish");
+                break;
+            default:
+                // Die
+                print("Death");
+                break;
+        }
+    }
+
     private void moveAudioPitch() {
         if(Math.Abs(pitchGoal - audio.pitch) > deltaPitch) {
             audio.pitch += + (float) (Math.Sign(pitchGoal - audio.pitch) * deltaPitch);
