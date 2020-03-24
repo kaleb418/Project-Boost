@@ -18,10 +18,17 @@ public class Rocket:MonoBehaviour {
     private double pitchGoal = 0.5f;
     private double deltaPitch = 0.05;
 
+    [SerializeField] float levelLoadDelay = 2f;
     [SerializeField] float thrustMultiplier = 700f;
     [SerializeField] float rotationMultiplier = 50f;
+
     [SerializeField] AudioClip engineAudio;
-    [SerializeField] AudioClip winAudio;
+    [SerializeField] AudioClip advanceAudio;
+    [SerializeField] AudioClip explodeAudio;
+
+    [SerializeField] ParticleSystem engineParticles;
+    [SerializeField] ParticleSystem advanceParticles;
+    [SerializeField] ParticleSystem explodeParticles;
 
     // Start is called before the first frame update
     void Start() {
@@ -37,7 +44,7 @@ public class Rocket:MonoBehaviour {
     // Update is called once per frame
     void Update() {
         ProcessInput();
-        moveAudioPitch();
+        HandleAudio();
     }
 
     private void OnCollisionEnter(Collision collision) {
@@ -52,16 +59,37 @@ public class Rocket:MonoBehaviour {
                 break;
             case "Finish":
                 // Win level - todo Win on landing, not hitting side
-                currentState = State.SceneWon;
-                rocketAudioSource.PlayOneShot(winAudio);
-                Invoke("LoadNextScene", 2f);
+                AdvanceSequence();
                 break;
             default:
                 // Die
-                currentState = State.SceneLost;
-                Invoke("LoadFirstScene", 2f);
+                DeathSequence();
                 break;
         }
+    }
+
+    private void AdvanceSequence() {
+        currentState = State.SceneWon;
+
+        rocketAudioSource.Stop();
+        rocketAudioSource.PlayOneShot(advanceAudio);
+
+        engineParticles.Stop();
+        advanceParticles.Play();
+
+        Invoke("LoadNextScene", levelLoadDelay);
+    }
+
+    private void DeathSequence() {
+        currentState = State.SceneLost;
+
+        rocketAudioSource.Stop();
+        rocketAudioSource.PlayOneShot(explodeAudio);
+
+        engineParticles.Stop();
+        explodeParticles.Play();
+
+        Invoke("LoadFirstScene", levelLoadDelay);
     }
 
     private void LoadNextScene() {
@@ -72,14 +100,14 @@ public class Rocket:MonoBehaviour {
         SceneManager.LoadScene(0);
     }
 
-    private void moveAudioPitch() {
-        if(!rocketAudioSource.isPlaying) {
+    private void HandleAudio() {
+        if(!rocketAudioSource.isPlaying && currentState == State.Running) {
             rocketAudioSource.PlayOneShot(engineAudio);
         }
-        if(Math.Abs(pitchGoal - GetComponent<AudioSource>().pitch) > deltaPitch) {
-            GetComponent<AudioSource>().pitch += + (float) (Math.Sign(pitchGoal - GetComponent<AudioSource>().pitch) * deltaPitch);
+        if(Math.Abs(pitchGoal - rocketAudioSource.pitch) > deltaPitch) {
+            rocketAudioSource.pitch += + (float) (Math.Sign(pitchGoal - rocketAudioSource.pitch) * deltaPitch);
         } else {
-            GetComponent<AudioSource>().pitch = (float) pitchGoal;
+            rocketAudioSource.pitch = (float) pitchGoal;
         }
     }
 
@@ -90,7 +118,9 @@ public class Rocket:MonoBehaviour {
                 // Thrusting
                 rocketBody.AddRelativeForce(Vector3.up * thrustMultiplier * Time.deltaTime);
                 pitchGoal = 3f;
+                engineParticles.Play();
             } else {
+                engineParticles.Stop();
                 pitchGoal = 0.5f;
             }
 
