@@ -14,6 +14,7 @@ public class Rocket:MonoBehaviour {
         SceneLost
     }
     private State currentState;
+    private bool collisionsEnabled = true;
 
     private double pitchGoal = 0.5f;
     private double deltaPitch = 0.05;
@@ -48,14 +49,11 @@ public class Rocket:MonoBehaviour {
     }
 
     private void OnCollisionEnter(Collision collision) {
-        if(currentState != State.Running) { return; }
+        if(currentState != State.Running || !collisionsEnabled) { return; }
 
         switch(collision.gameObject.tag) {
             case "Friendly":
                 // Do nothing
-                break;
-            case "Fuel":
-                // Fuel ship - todo Add fuel aspect
                 break;
             case "Finish":
                 // Win level - todo Win on landing, not hitting side
@@ -89,15 +87,23 @@ public class Rocket:MonoBehaviour {
         engineParticles.Stop();
         explodeParticles.Play();
 
-        Invoke("LoadFirstScene", levelLoadDelay);
+        Invoke("LoadPreviousScene", levelLoadDelay);
     }
 
     private void LoadNextScene() {
-        SceneManager.LoadScene(1);
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        if(nextSceneIndex == SceneManager.sceneCountInBuildSettings) {
+            nextSceneIndex = 0;
+        }
+        SceneManager.LoadScene(nextSceneIndex);
     }
 
-    private void LoadFirstScene() {
-        SceneManager.LoadScene(0);
+    private void LoadPreviousScene() {
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
+        if(nextSceneIndex == -1) {
+            nextSceneIndex = 0;
+        }
+        SceneManager.LoadScene(nextSceneIndex);
     }
 
     private void HandleAudio() {
@@ -112,7 +118,11 @@ public class Rocket:MonoBehaviour {
     }
 
     private void ProcessInput() {
-        rocketBody.freezeRotation = true;
+        if(Debug.isDebugBuild) {
+            ProcessDebugKeys();
+        }
+        
+        rocketBody.angularVelocity = new Vector3(0, 0, 0);
         if(currentState == State.Running) {
             if(Input.GetKey(KeyCode.Space)) {
                 // Thrusting
@@ -120,6 +130,7 @@ public class Rocket:MonoBehaviour {
                 pitchGoal = 3f;
                 engineParticles.Play();
             } else {
+                // Not thrusting
                 engineParticles.Stop();
                 pitchGoal = 0.5f;
             }
@@ -127,14 +138,23 @@ public class Rocket:MonoBehaviour {
             if(Input.GetKey(KeyCode.A)) {
                 // Rotate left
                 transform.Rotate(Vector3.forward * rotationMultiplier * Time.deltaTime);
-            }
-            else if(Input.GetKey(KeyCode.D)) {
+            } else if(Input.GetKey(KeyCode.D)) {
                 // Rotate right
                 transform.Rotate(Vector3.back * rotationMultiplier * Time.deltaTime);
             }
         } else {
             pitchGoal = 0.5f;
         }
-        rocketBody.freezeRotation = false;
+    }
+
+    private void ProcessDebugKeys() {
+        if(Input.GetKeyDown(KeyCode.L)) {
+            // Go to next level
+            LoadNextScene();
+        }
+        if(Input.GetKeyDown(KeyCode.C)) {
+            // Toggles collisions
+            collisionsEnabled = !collisionsEnabled;
+        }
     }
 }

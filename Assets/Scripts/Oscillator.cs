@@ -8,6 +8,7 @@ public class Oscillator:MonoBehaviour {
 
     [SerializeField] Vector3 movementVector;
     [SerializeField] [Range(0, 1)] float oscillationSpeed;
+    [SerializeField] bool scaleOscillation = false;
 
     private float oscillationMultiplier;
     private Vector3 startingPosition;
@@ -15,7 +16,11 @@ public class Oscillator:MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
-        startingPosition = transform.position;
+        if(scaleOscillation) {
+            startingPosition = transform.localScale;
+        } else {
+            startingPosition = transform.position;
+        }
     }
 
     // Update is called once per frame
@@ -23,7 +28,12 @@ public class Oscillator:MonoBehaviour {
         if(oscillationSpeed > Mathf.Epsilon) {
             timeSinceStart = Time.deltaTime + timeSinceStart;
             oscillationMultiplier = (float) Math.Sin((float) timeSinceStart / oscillationSpeed);
-            transform.position = startingPosition + movementVector * oscillationMultiplier;
+
+            if(scaleOscillation) {
+                transform.localScale = startingPosition + movementVector * oscillationMultiplier;
+            } else {
+                transform.position = startingPosition + movementVector * oscillationMultiplier;
+            }
         }
     }
 }
