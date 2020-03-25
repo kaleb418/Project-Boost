@@ -122,7 +122,7 @@ public class Rocket:MonoBehaviour {
             ProcessDebugKeys();
         }
         
-        rocketBody.angularVelocity = new Vector3(0, 0, 0);
+        rocketBody.angularVelocity = Vector3.zero;
         if(currentState == State.Running) {
             if(Input.GetKey(KeyCode.Space)) {
                 // Thrusting
