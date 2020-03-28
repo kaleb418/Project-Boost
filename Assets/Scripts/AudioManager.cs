@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class AudioManager:MonoBehaviour {
     [SerializeField] AudioClip[] musicClip;
@@ -8,20 +6,9 @@ public class AudioManager:MonoBehaviour {
     private AudioSource audioSource;
     private bool audioIsQueued = false;
     private int lastSongPlayedIndex;
-    private bool hasBeenPermanenced = false;
 
     private void Awake() {
-        if(!GameObject.Find("Game Audio").GetComponent<AudioManager>().hasPermanentStatus()) {
-            // Only set DontDestroy once, even on future scene loads
-            DontDestroyOnLoad(this);
-            setPermanentStatus();
-            /*
-             * Todo
-             *
-             * Create master scene which loads universal objects
-             * and is inaccessible after initial load to prevent dupes
-             */
-        }
+        DontDestroyOnLoad(this);
     }
 
     // Start is called before the first frame update
@@ -55,13 +42,5 @@ public class AudioManager:MonoBehaviour {
             Invoke("PlayRandomMusic", 10f);
             audioIsQueued = true;
         }
-    }
-
-    public void setPermanentStatus() {
-        hasBeenPermanenced = true;
-    }
-
-    public bool hasPermanentStatus() {
-        return hasBeenPermanenced;
     }
 }

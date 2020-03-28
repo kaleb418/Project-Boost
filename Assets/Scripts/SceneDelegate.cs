@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneDelegate:MonoBehaviour {
@@ -12,56 +10,44 @@ public class SceneDelegate:MonoBehaviour {
     }
     public static State currentState;
 
-    private bool hasBeenPermanenced = false;
-
     private void Awake() {
-        if(!GameObject.Find("Scene Delegate").GetComponent<SceneDelegate>().hasPermanentStatus()) {
-            // Only set DontDestroy once, even on future scene loads
-            DontDestroyOnLoad(this);
-            setPermanentStatus();
-        }
+        DontDestroyOnLoad(this);
     }
 
     // Start is called before the first frame update
     void Start() {
+        // Load Menu Scene
+        LoadMenuScene();
         currentState = State.Menu;
     }
 
     // Update is called once per frame
     void Update() {
-        ProcessInput();
+
     }
 
-    public static void LoadNextScene() {
+    public void LoadMenuScene() {
+        currentState = State.Menu;
+        SceneManager.LoadScene(1);
+    }
+
+    public void LoadNextGameScene() {
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         if(nextSceneIndex == SceneManager.sceneCountInBuildSettings) {
-            nextSceneIndex = 0;
+            // Load menu
+            nextSceneIndex = 2; // Goes back to level 1
         }
+        currentState = State.Running;
         SceneManager.LoadScene(nextSceneIndex);
     }
 
-    public static void LoadPreviousScene() {
+    public void LoadPreviousGameScene() {
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
-        if(nextSceneIndex == 0) {
+        if(nextSceneIndex == 1) {
             // Prevent going back to menu
-            nextSceneIndex = 1;
+            nextSceneIndex = 2;
         }
+        currentState = State.Running;
         SceneManager.LoadScene(nextSceneIndex);
-    }
-
-    public void setPermanentStatus() {
-        hasBeenPermanenced = true;
-    }
-
-    public bool hasPermanentStatus() {
-        return hasBeenPermanenced;
-    }
-
-    private void ProcessInput() {
-        if(currentState == State.Menu) {
-            if(Input.GetKey(KeyCode.Space)) {
-                LoadNextScene();
-            }
-        }
     }
 }

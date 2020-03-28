@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using static SceneDelegate;
 
 public class Rocket:MonoBehaviour {
     private Rigidbody rocketBody;
     private AudioSource rocketAudioSource;
-    private bool collisionsEnabled = true;
 
+    private AudioManager gameMasterAudioSource;
+    private SceneDelegate sceneDelegator;
+
+    private bool collisionsEnabled = true;
     private double pitchGoal = 0.5f;
     private double deltaPitch = 0.05;
 
@@ -31,16 +31,44 @@ public class Rocket:MonoBehaviour {
         currentState = State.Running;
     }
 
+    // Update is called once per frame
+    void Update() {
+        HandleAudio();
+        rocketBody.angularVelocity = Vector3.zero;
+    }
+
+    public void toggleCollisions() {
+        collisionsEnabled = !collisionsEnabled;
+    }
+
+    public void setRocketAudioPitchGoal(float audioPitch) {
+        pitchGoal = audioPitch;
+    }
+
+    public void RocketRotate(bool thrustRight) {
+        // Rotate left
+        transform.Rotate((thrustRight ? Vector3.back : Vector3.forward) * rotationMultiplier * Time.deltaTime);
+    }
+
+    public void RocketThrust() {
+        // Thrusting
+        rocketBody.AddRelativeForce(Vector3.up * thrustMultiplier * Time.deltaTime);
+        setRocketAudioPitchGoal(3f);
+        engineParticles.Play();
+    }
+
+    public void RocketIdle() {
+        // Not thrusting
+        engineParticles.Stop();
+        setRocketAudioPitchGoal(0.5f);
+    }
+
     private void SetComponents() {
         rocketBody = GetComponent<Rigidbody>();
         rocketAudioSource = GetComponent<AudioSource>();
-        rocketAudioSource.volume = 0.2f;
-    }
-
-    // Update is called once per frame
-    void Update() {
-        ProcessInput();
-        HandleAudio();
+        gameMasterAudioSource = GameObject.Find("Game Audio").GetComponent<AudioManager>();
+        sceneDelegator = GameObject.Find("Scene Delegate").GetComponent<SceneDelegate>();
+        rocketAudioSource.volume = 0.3f;
     }
 
     private void OnCollisionEnter(Collision collision) {
@@ -50,7 +78,6 @@ public class Rocket:MonoBehaviour {
                 // Do nothing
                 break;
             case "Finish":
-                // Win level - todo Win on landing, not hitting side
                 AdvanceSequence();
                 break;
             default:
@@ -67,7 +94,8 @@ public class Rocket:MonoBehaviour {
         rocketAudioSource.PlayOneShot(advanceAudio);
 
         engineParticles.Stop();
-        rocketAudioSource.volume = 0.5f;
+        rocketAudioSource.pitch = 1f;
+        rocketAudioSource.volume = 1f;
         advanceParticles.Play();
 
         Invoke("CallLoadNextScene", levelLoadDelay);
@@ -77,7 +105,7 @@ public class Rocket:MonoBehaviour {
         currentState = State.SceneLost;
 
         rocketAudioSource.Stop();
-        rocketAudioSource.volume = 0.5f;
+        rocketAudioSource.volume = 1f;
         rocketAudioSource.PlayOneShot(explodeAudio);
 
         engineParticles.Stop();
@@ -88,11 +116,11 @@ public class Rocket:MonoBehaviour {
     }
 
     private void CallLoadNextScene() {
-        SceneDelegate.LoadNextScene();
+        sceneDelegator.LoadNextGameScene();
     }
 
     private void CallLoadPreviousScene() {
-        SceneDelegate.LoadPreviousScene();
+        sceneDelegator.LoadPreviousGameScene();
     }
 
     private void HandleAudio() {
@@ -103,54 +131,6 @@ public class Rocket:MonoBehaviour {
             rocketAudioSource.pitch += + (float) (Math.Sign(pitchGoal - rocketAudioSource.pitch) * deltaPitch);
         } else {
             rocketAudioSource.pitch = (float) pitchGoal;
-        }
-    }
-
-    private void ProcessInput() {
-        if(Debug.isDebugBuild) {
-            ProcessDebugKeys();
-        }
-        
-        rocketBody.angularVelocity = Vector3.zero;
-        if(currentState == State.Running) {
-            if(Input.GetKey(KeyCode.Space)) {
-                // Thrusting
-                rocketBody.AddRelativeForce(Vector3.up * thrustMultiplier * Time.deltaTime);
-                pitchGoal = 3f;
-                engineParticles.Play();
-            } else {
-                // Not thrusting
-                engineParticles.Stop();
-                pitchGoal = 0.5f;
-            }
-
-            if(Input.GetKey(KeyCode.A)) {
-                // Rotate left
-                transform.Rotate(Vector3.forward * rotationMultiplier * Time.deltaTime);
-            } else if(Input.GetKey(KeyCode.D)) {
-                // Rotate right
-                transform.Rotate(Vector3.back * rotationMultiplier * Time.deltaTime);
-            }
-        } else {
-            pitchGoal = 0.5f;
-        }
-    }
-
-    private void ProcessDebugKeys() {
-        if(Input.GetKeyDown(KeyCode.L)) {
-            // Go to next level
-            SceneDelegate.LoadNextScene();
-        }
-        if(Input.GetKeyDown(KeyCode.C)) {
-            // Toggles collisions
-            collisionsEnabled = !collisionsEnabled;
-        }
-        if(Input.GetKeyDown(KeyCode.M)) {
-            // New music audio
-            GameObject audioSourceObject = GameObject.Find("Game Audio");
-            AudioManager activeGameAudioManager = audioSourceObject.GetComponent<AudioManager>();
-            activeGameAudioManager.StopMusic();
-            activeGameAudioManager.PlayRandomMusic();
         }
     }
 }
