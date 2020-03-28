@@ -3,17 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static SceneDelegate;
 
 public class Rocket:MonoBehaviour {
     private Rigidbody rocketBody;
     private AudioSource rocketAudioSource;
-
-    private enum State {
-        Running,
-        SceneWon,
-        SceneLost
-    }
-    private State currentState;
     private bool collisionsEnabled = true;
 
     private double pitchGoal = 0.5f;
@@ -33,13 +27,14 @@ public class Rocket:MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
-        currentState = State.Running;
         SetComponents();
+        currentState = State.Running;
     }
 
     private void SetComponents() {
         rocketBody = GetComponent<Rigidbody>();
         rocketAudioSource = GetComponent<AudioSource>();
+        rocketAudioSource.volume = 0.2f;
     }
 
     // Update is called once per frame
@@ -50,7 +45,6 @@ public class Rocket:MonoBehaviour {
 
     private void OnCollisionEnter(Collision collision) {
         if(currentState != State.Running || !collisionsEnabled) { return; }
-
         switch(collision.gameObject.tag) {
             case "Friendly":
                 // Do nothing
@@ -73,37 +67,32 @@ public class Rocket:MonoBehaviour {
         rocketAudioSource.PlayOneShot(advanceAudio);
 
         engineParticles.Stop();
+        rocketAudioSource.volume = 0.5f;
         advanceParticles.Play();
 
-        Invoke("LoadNextScene", levelLoadDelay);
+        Invoke("CallLoadNextScene", levelLoadDelay);
     }
 
     private void DeathSequence() {
         currentState = State.SceneLost;
 
         rocketAudioSource.Stop();
+        rocketAudioSource.volume = 0.5f;
         rocketAudioSource.PlayOneShot(explodeAudio);
 
         engineParticles.Stop();
+        transform.localScale = new Vector3(0, 0, 0);
         explodeParticles.Play();
 
-        Invoke("LoadPreviousScene", levelLoadDelay);
+        Invoke("CallLoadPreviousScene", levelLoadDelay);
     }
 
-    private void LoadNextScene() {
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        if(nextSceneIndex == SceneManager.sceneCountInBuildSettings) {
-            nextSceneIndex = 0;
-        }
-        SceneManager.LoadScene(nextSceneIndex);
+    private void CallLoadNextScene() {
+        SceneDelegate.LoadNextScene();
     }
 
-    private void LoadPreviousScene() {
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex - 1;
-        if(nextSceneIndex == -1) {
-            nextSceneIndex = 0;
-        }
-        SceneManager.LoadScene(nextSceneIndex);
+    private void CallLoadPreviousScene() {
+        SceneDelegate.LoadPreviousScene();
     }
 
     private void HandleAudio() {
@@ -150,11 +139,18 @@ public class Rocket:MonoBehaviour {
     private void ProcessDebugKeys() {
         if(Input.GetKeyDown(KeyCode.L)) {
             // Go to next level
-            LoadNextScene();
+            SceneDelegate.LoadNextScene();
         }
         if(Input.GetKeyDown(KeyCode.C)) {
             // Toggles collisions
             collisionsEnabled = !collisionsEnabled;
+        }
+        if(Input.GetKeyDown(KeyCode.M)) {
+            // New music audio
+            GameObject audioSourceObject = GameObject.Find("Game Audio");
+            AudioManager activeGameAudioManager = audioSourceObject.GetComponent<AudioManager>();
+            activeGameAudioManager.StopMusic();
+            activeGameAudioManager.PlayRandomMusic();
         }
     }
 }
