@@ -7,7 +7,7 @@ public class AudioManager:MonoBehaviour {
     private bool audioIsQueued = false;
     private int lastSongPlayedIndex;
 
-    private void Awake() {
+    void Awake() {
         DontDestroyOnLoad(this);
     }
 

@@ -10,20 +10,29 @@ public class SceneDelegate:MonoBehaviour {
     }
     public static State currentState;
 
-    private void Awake() {
+    private InputManager inputManager;
+
+    void Awake() {
         DontDestroyOnLoad(this);
+
+        SceneManager.sceneLoaded += OnSceneLoad;
     }
 
     // Start is called before the first frame update
     void Start() {
-        // Load Menu Scene
+        // Load menu scene
         LoadMenuScene();
         currentState = State.Menu;
     }
 
     // Update is called once per frame
     void Update() {
+    }
 
+    // Called on scene load
+    public void OnSceneLoad(Scene scene, LoadSceneMode mode) {
+        inputManager = GameObject.Find("Input Manager").GetComponent<InputManager>();
+        inputManager.OnSceneLoad();
     }
 
     public void LoadMenuScene() {

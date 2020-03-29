@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using static SceneDelegate;
 
 public class InputManager:MonoBehaviour {
@@ -6,13 +8,14 @@ public class InputManager:MonoBehaviour {
     private SceneDelegate sceneDelegator;
     private AudioManager gameMasterAudioSource;
 
-    private void Awake() {
+    void Awake() {
         DontDestroyOnLoad(this);
     }
 
     // Start is called before the first frame update
     void Start() {
-        
+        sceneDelegator = GameObject.Find("Scene Delegate").GetComponent<SceneDelegate>();
+        gameMasterAudioSource = GameObject.Find("Game Audio").GetComponent<AudioManager>();
     }
 
     // Update is called once per frame
@@ -20,10 +23,11 @@ public class InputManager:MonoBehaviour {
         ProcessInput();
     }
 
-    private void OnLevelWasLoaded(int level) {
-        rocketObj = GameObject.Find("Rocket Ship").GetComponent<Rocket>();
-        sceneDelegator = GameObject.Find("Scene Delegate").GetComponent<SceneDelegate>();
-        gameMasterAudioSource = GameObject.Find("Game Audio").GetComponent<AudioManager>();
+    public void OnSceneLoad() {
+        if(currentState != State.Menu) {
+            // Only set rocket reference if game is playing, and for each scene load
+            rocketObj = GameObject.Find("Rocket Ship").GetComponent<Rocket>();
+        }
     }
 
     private void ProcessInput() {
@@ -32,6 +36,7 @@ public class InputManager:MonoBehaviour {
         }
 
         if(currentState == State.Running) {
+            // Process controls
             if(Input.GetKey(KeyCode.Space)) {
                 rocketObj.RocketThrust();
             } else {
@@ -49,10 +54,12 @@ public class InputManager:MonoBehaviour {
             }
         }
         else if(currentState == State.Menu) {
+            // Load first game level
             if(Input.GetKey(KeyCode.Space)) {
                 sceneDelegator.LoadNextGameScene();
             }
         } else {
+            // Only called if in dying or winning game state
             rocketObj.setRocketAudioPitchGoal(0.5f);
         }
     }
